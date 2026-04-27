@@ -109,40 +109,51 @@ useEffect(() => {
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   if (isTouchDevice) return;
 
-  const handleMouseMove = (e) => {
-    if (cursorRef.current) cursorRef.current.style.opacity = "1";
-    mouse.current = { x: e.clientX, y: e.clientY };
+  const resyncCursor = (e) => {
+    // This forces the "Target" and the "Follower" to be at the same spot 
+    // to prevent the math from freezing during tab lag
+    const x = e ? e.clientX : mouse.current.x;
+    const y = e ? e.clientY : mouse.current.y;
+    
+    mouse.current = { x, y };
+    cursorPos.current = { x, y }; // Teleport the follower to the mouse
+    
+    if (cursorRef.current) {
+      cursorRef.current.style.opacity = "1";
+      // Manually update transform to prevent the 1-frame "jump"
+      cursorRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    }
   };
 
-  // NEW: This fixes the "freezing" or "jumping" when switching tabs
-  const handleFocus = () => {
-    // When you come back to the tab, instantly snap the cursor to the mouse
-    cursorPos.current = { x: mouse.current.x, y: mouse.current.y };
+  const handleMouseMove = (e) => {
+    mouse.current = { x: e.clientX, y: e.clientY };
+    if (cursorRef.current && cursorRef.current.style.opacity === "0") {
+      resyncCursor(e); // If it was hidden, teleport it to the mouse instantly
+    }
   };
 
   const handleVisibility = () => {
-    if (document.hidden) {
-      if (cursorRef.current) cursorRef.current.style.opacity = "0";
+    if (!document.hidden) {
+      // Tab is back! Give the browser a tiny moment to wake up, then resync
+      setTimeout(() => resyncCursor(), 10);
     } else {
-      // Sync positions again when tab becomes visible
-      handleFocus();
+      if (cursorRef.current) cursorRef.current.style.opacity = "0";
     }
   };
 
   window.addEventListener("mousemove", handleMouseMove);
-  window.addEventListener("focus", handleFocus); // Sync on window focus
+  window.addEventListener("focus", () => resyncCursor()); // Sync when clicking back
   document.addEventListener("visibilitychange", handleVisibility);
   
   requestRef.current = requestAnimationFrame(animate);
 
   return () => {
     window.removeEventListener("mousemove", handleMouseMove);
-    window.removeEventListener("focus", handleFocus);
+    window.removeEventListener("focus", () => resyncCursor());
     document.removeEventListener("visibilitychange", handleVisibility);
     cancelAnimationFrame(requestRef.current);
   };
 }, []);
-
   const total = cart.reduce((sum, item) => sum + item.price, 0);
 
   const renderMenu = (type) => (
