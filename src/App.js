@@ -8,10 +8,11 @@ function App() {
   const cursorRef = useRef(null);
   const satRefs = useRef([]);
   const requestRef = useRef();
+  const initialized = useRef(false);
   
   const mouse = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
   const cursorPos = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
-  const radius = 40; // Smaller radius for mobile circles
+  const radius = 40;
 
   const menus = {
     bakery: [
@@ -56,29 +57,46 @@ function App() {
     ]
   };
 
-const animate = () => {
-    const cursor = cursorRef.current;
-    
-    // Smooth Cursor Follow
-    cursorPos.current.x += (mouse.current.x - cursorPos.current.x) * 0.15;
-    cursorPos.current.y += (mouse.current.y - cursorPos.current.y) * 0.15;
-    
-    if (cursor) {
-      cursor.style.transform = `translate3d(${cursorPos.current.x}px, ${cursorPos.current.y}px, 0)`;
+// Percent-based spawning (0.1 = 10% of screen width/height)
+  const satData = useRef([
+    { id: 0, px: 0.2, py: 0.3, vx: 0.8, vy: 0.6, label: 'BAKERY', target: 'bakery', x: 0, y: 0 },
+    { id: 1, px: 0.6, py: 0.5, vx: -0.7, vy: 0.9, label: 'FOOD', target: 'food', x: 0, y: 0 },
+    { id: 2, px: 0.3, py: 0.7, vx: 0.9, vy: -0.7, label: 'CHINESE', target: 'chinese', x: 0, y: 0 }
+  ]);
+
+  const animate = () => {
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+
+    // Initial safe spawn logic
+    if (!initialized.current) {
+      satData.current.forEach(s => {
+        s.x = s.px * W;
+        s.y = s.py * H;
+      });
+      initialized.current = true;
     }
 
+    // Cursor Movement
+    cursorPos.current.x += (mouse.current.x - cursorPos.current.x) * 0.15;
+    cursorPos.current.y += (mouse.current.y - cursorPos.current.y) * 0.15;
+    if (cursorRef.current) {
+      cursorRef.current.style.transform = `translate3d(${cursorPos.current.x}px, ${cursorPos.current.y}px, 0)`;
+    }
+
+    // Satellites Physics
     satData.current.forEach((sat, i) => {
-      // Logic: Keep inside current window bounds
-      sat.x += sat.vx; 
+      sat.x += sat.vx;
       sat.y += sat.vy;
 
-      const rightEdge = window.innerWidth - (radius * 2);
-      const bottomEdge = window.innerHeight - (radius * 2);
+      // Keep inside dynamic bounds
+      const limitX = W - 90;
+      const limitY = H - 90;
 
-      if (sat.x < 0) { sat.x = 0; sat.vx *= -1; }
-      if (sat.x > rightEdge) { sat.x = rightEdge; sat.vx *= -1; }
-      if (sat.y < 0) { sat.y = 0; sat.vy *= -1; }
-      if (sat.y > bottomEdge) { sat.y = bottomEdge; sat.vy *= -1; }
+      if (sat.x < 10) { sat.x = 10; sat.vx = Math.abs(sat.vx); }
+      if (sat.x > limitX) { sat.x = limitX; sat.vx = -Math.abs(sat.vx); }
+      if (sat.y < 10) { sat.y = 10; sat.vy = Math.abs(sat.vy); }
+      if (sat.y > limitY) { sat.y = limitY; sat.vy = -Math.abs(sat.vy); }
 
       if (satRefs.current[i]) {
         satRefs.current[i].style.transform = `translate3d(${sat.x}px, ${sat.y}px, 0)`;
@@ -90,7 +108,6 @@ const animate = () => {
 
   useEffect(() => {
     const handleMove = (e) => {
-      // Works for both Mouse and Touch
       const x = e.touches ? e.touches[0].clientX : e.clientX;
       const y = e.touches ? e.touches[0].clientY : e.clientY;
       mouse.current = { x, y };
@@ -98,7 +115,8 @@ const animate = () => {
     };
 
     const resync = () => {
-        cursorPos.current = { x: mouse.current.x, y: mouse.current.y };
+      cursorPos.current = { x: mouse.current.x, y: mouse.current.y };
+      if (cursorRef.current) cursorRef.current.style.opacity = "1";
     };
 
     window.addEventListener("mousemove", handleMove);
@@ -106,7 +124,6 @@ const animate = () => {
     window.addEventListener("touchmove", handleMove);
     window.addEventListener("focus", resync);
     document.addEventListener("visibilitychange", resync);
-
     requestRef.current = requestAnimationFrame(animate);
 
     return () => {
@@ -119,10 +136,58 @@ const animate = () => {
     };
   }, []);
 
+  const total = cart.reduce((sum, item) => sum + item.price, 0);
+
+  const renderMenu = (type) => (
+    <section className="shop-view">
+      <div className="menu-header">
+        <h2>{type.toUpperCase()} <span>MENU</span></h2>
+        <button className="back-btn" onClick={() => setView('home')}>← BACK</button>
+      </div>
+      <div className="grid">
+        {menus[type].map(item => (
+          <div key={item.id} className="food-card">
+            <div className="img-wrap"><img src={item.img} alt={item.name} /></div>
+            <div className="card-info">
+              <h3>{item.name}</h3>
+              <p className="price">₹{item.price}</p>
+              <button className="order-btn" onClick={() => setCart([...cart, item])}>ADD TO BAG</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+
   return (
     <div className="site-wrapper">
       <div className="void-bg" />
       <div ref={cursorRef} className="cursor-follower" />
+
+      {/* Cart Drawer */}
+      <div className={`cart-drawer ${isCartOpen ? 'open' : ''}`}>
+        <div className="cart-inner">
+          <div className="cart-head">
+            <h3>YOUR BAG</h3>
+            <button className="close-cart" onClick={() => setIsCartOpen(false)}>✕</button>
+          </div>
+          <div className="cart-items">
+            {cart.length === 0 ? <p className="empty-msg">Empty...</p> : 
+              cart.map((item, index) => (
+                <div key={index} className="cart-row">
+                  <span>{item.name}</span>
+                  <span>₹{item.price}</span>
+                  <button onClick={() => setCart(cart.filter((_, i) => i !== index))}>✕</button>
+                </div>
+              ))
+            }
+          </div>
+          <div className="cart-footer">
+            <div className="total-row"><span>TOTAL:</span><span>₹{total}</span></div>
+            <button className="checkout-btn" disabled={cart.length === 0}>CHECKOUT</button>
+          </div>
+        </div>
+      </div>
 
       <nav className="glass-nav">
         <div className="logo" onClick={() => setView("home")}>NEON<span>HUB</span></div>
@@ -130,7 +195,7 @@ const animate = () => {
       </nav>
 
       {view === "home" && (
-        <div className="home-container">
+        <>
           <div className="space-layer">
             {satData.current.map((s, i) => (
               <div key={i} ref={el => satRefs.current[i] = el} className="sat-positioner">
@@ -141,49 +206,64 @@ const animate = () => {
             ))}
           </div>
           <section className="hero">
-            <h1>NEON <br/> <span className="cyan-text">HUB</span></h1>
+            <div className="hero-content">
+              <h1>NEON <br/> <span className="cyan-text">HUB</span></h1>
+              <p>SELECT A SECTOR</p>
+            </div>
           </section>
-        </div>
+        </>
       )}
 
-      {/* Render Menu Logic (Truncated for brevity) */}
-      {view !== "home" && (
-          <div className="shop-view">
-              <button onClick={() => setView("home")}>BACK</button>
-              <h2>{view.toUpperCase()}</h2>
-          </div>
-      )}
+      {view !== "home" && renderMenu(view)}
 
       <style>{`
-        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; touch-action: none; }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #000; color: #fff; font-family: 'Outfit', sans-serif; overflow: hidden; touch-action: none; }
+        
         .void-bg { position: fixed; inset: 0; background: radial-gradient(circle, #061b2b, #000); z-index: -1; }
         
         .cursor-follower {
           position: fixed; top: 0; left: 0; width: 20px; height: 20px;
           border: 2px solid #00f2ff; border-radius: 50%;
           pointer-events: none; z-index: 9999; margin: -10px 0 0 -10px;
-          opacity: 0; will-change: transform;
+          opacity: 0; will-change: transform; transition: opacity 0.3s;
         }
 
         .space-layer { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
-        .sat-positioner { position: absolute; top: 0; left: 0; pointer-events: auto; }
+        .sat-positioner { position: absolute; top: 0; left: 0; pointer-events: auto; will-change: transform; }
         
         .unified-rotating-circle {
-          width: 80px; height: 80px; border-radius: 50%;
-          border: 2px solid #00f2ff; background: rgba(0,0,0,0.8);
-          color: #00f2ff; font-weight: bold; font-size: 10px;
+          width: 85px; height: 85px; border-radius: 50%;
+          border: 2px solid #00f2ff; background: rgba(0,0,0,0.9);
+          color: #00f2ff; font-weight: 900; font-size: 10px; letter-spacing: 1px;
           cursor: pointer; display: flex; align-items: center; justify-content: center;
-          box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+          box-shadow: 0 0 20px rgba(0, 242, 255, 0.3);
+          -webkit-tap-highlight-color: transparent;
         }
 
-        .glass-nav { position: fixed; top: 0; width: 100%; display: flex; justify-content: space-between; padding: 15px; z-index: 100; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); }
-        .hero { height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; pointer-events: none; }
-        .hero h1 { font-size: 4rem; margin: 0; }
+        .glass-nav { position: fixed; top: 0; width: 100%; display: flex; justify-content: space-between; padding: 20px; z-index: 100; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0,242,255,0.2); }
+        .logo { font-weight: 900; color: #00f2ff; cursor: pointer; }
+        .cart-pill { background: #00f2ff; color: #000; border: none; padding: 8px 15px; font-weight: 900; border-radius: 4px; }
+
+        .hero { height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; }
+        .hero h1 { font-size: 5rem; margin: 0; font-weight: 900; line-height: 0.9; }
         .cyan-text { color: #00f2ff; }
 
+        .shop-view { height: 100vh; overflow-y: auto; padding: 120px 20px 40px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .food-card { background: #111; border: 1px solid #222; padding: 15px; }
+        .food-card img { width: 100%; height: 150px; object-fit: cover; }
+        .price { color: #00f2ff; font-weight: 900; }
+        .order-btn { width: 100%; padding: 10px; background: #fff; border: none; font-weight: 900; }
+
+        .cart-drawer { position: fixed; top: 0; right: -100%; width: 100%; max-width: 400px; height: 100%; background: #000; z-index: 1000; transition: 0.4s; border-left: 1px solid #00f2ff; }
+        .cart-drawer.open { right: 0; }
+        .cart-inner { padding: 30px; display: flex; flex-direction: column; height: 100%; }
+        .cart-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #222; }
+
         @media (max-width: 600px) {
-            .hero h1 { font-size: 2.5rem; }
-            .unified-rotating-circle { width: 70px; height: 70px; }
+          .hero h1 { font-size: 3rem; }
+          .unified-rotating-circle { width: 75px; height: 75px; }
         }
       `}</style>
     </div>
