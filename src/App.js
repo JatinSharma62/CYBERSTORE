@@ -82,30 +82,37 @@ function App() {
   };
 
   useEffect(() => {
+    const cursor = cursorRef.current;
+
     const handleMouseMove = (e) => {
-      if (cursorRef.current) cursorRef.current.style.opacity = "1";
+      if (cursor) cursor.style.opacity = "1";
       mouse.current = { x: e.clientX, y: e.clientY };
     };
 
     const handleMouseLeave = () => {
-      if (cursorRef.current) cursorRef.current.style.opacity = "0";
+      if (cursor) cursor.style.opacity = "0";
     };
 
     const handleVisibilityChange = () => {
-      if (document.hidden && cursorRef.current) {
-        cursorRef.current.style.opacity = "0";
+      if (document.hidden) {
+        if (cursor) cursor.style.opacity = "0";
+      } else {
+        // Prevent "gliding" from last position when returning
+        cursorPos.current = { ...mouse.current };
       }
     };
 
     window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseout", handleMouseLeave);
+    window.addEventListener("mouseleave", handleMouseLeave);
+    window.addEventListener("blur", handleMouseLeave); // Handles Alt-Tab
     document.addEventListener("visibilitychange", handleVisibilityChange);
     
     requestRef.current = requestAnimationFrame(animate);
     
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseout", handleMouseLeave);
+      window.removeEventListener("mouseleave", handleMouseLeave);
+      window.removeEventListener("blur", handleMouseLeave);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       cancelAnimationFrame(requestRef.current);
     };
@@ -205,7 +212,6 @@ function App() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;900&display=swap');
         
-        /* 1. PC: Hide real cursor. 2. Mobile: Hide the circle entirely */
         @media (hover: hover) {
           * { cursor: none !important; }
         }
@@ -223,7 +229,7 @@ function App() {
           border: 1.5px solid #00f2ff; border-radius: 50%;
           pointer-events: none; z-index: 10000; margin-left: -7px; margin-top: -7px;
           transition: width 0.3s, height 0.3s, background 0.3s, opacity 0.2s; will-change: transform;
-          opacity: 0; /* Hidden by default until move */
+          opacity: 0; 
         }
         .cursor-follower.captured { width: 100px; height: 100px; margin-left: -50px; margin-top: -50px; background: rgba(0, 242, 255, 0.1); border-width: 1px; box-shadow: 0 0 30px rgba(0, 242, 255, 0.3); }
 
