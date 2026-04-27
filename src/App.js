@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Analytics } from "@vercel/analytics/react";
 
 function App() {
   const [view, setView] = useState("home");
   const [cart, setCart] = useState([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false); // New state to toggle cart
   
   const cursorRef = useRef(null);
   const satRefs = useRef([]);
@@ -19,16 +18,41 @@ function App() {
       { id: 1, name: "Neon Croissant", price: 150, img: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400" },
       { id: 2, name: "Quantum Cupcake", price: 120, img: "https://images.unsplash.com/photo-1519869325930-281384150729?w=400" },
       { id: 3, name: "Plasma Sourdough", price: 250, img: "https://images.unsplash.com/photo-1585478259715-876a6a81fc08?w=400" },
+      { id: 4, name: "Cyber Macarons", price: 400, img: "https://images.unsplash.com/photo-1569864358642-9d16197022c9?w=400" },
+      { id: 5, name: "Grid Baguette", price: 90, img: "https://images.unsplash.com/photo-1533777419517-3e4017e2e15a?w=400" },
+      { id: 6, name: "Logic Lemon Tart", price: 300, img: "https://images.unsplash.com/photo-1519915028121-7d3463d20b13?w=400" },
+      { id: 7, name: "Data Donut", price: 80, img: "https://images.unsplash.com/photo-1551024601-bec78aea704b?w=400" },
+      { id: 8, name: "Neural Nut Cake", price: 950, img: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400" },
+      { id: 9, name: "Binary Bun", price: 50, img: "https://images.unsplash.com/photo-1506459225024-1428097a7e18?w=400" },
+      { id: 10, name: "Vector Velvet", price: 750, img: "https://images.unsplash.com/photo-1616541823729-00fe0aacd32c?w=400" },
+      { id: 11, name: "Hacker Danish", price: 180, img: "https://images.unsplash.com/photo-1509365465985-25d11c17e812?w=400" },
+      { id: 12, name: "A.I. Apple Pie", price: 450, img: "https://images.unsplash.com/photo-1568571780765-9276ac8b75a2?w=400" },
+      { id: 13, name: "Static Scone", price: 110, img: "https://images.unsplash.com/photo-1589114473223-1025555d482c?w=400" },
+      { id: 14, name: "Sync Berry Cake", price: 880, img: "https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400" },
       { id: 15, name: "Glitch Cookie", price: 40, img: "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=400" }
     ],
     food: [
       { id: 201, name: "Grid Burger", price: 450, img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500" },
       { id: 202, name: "Carbon Pizza", price: 600, img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500" },
-      { id: 203, name: "Laser Steak", price: 1200, img: "https://images.unsplash.com/photo-1546241072-48010ad28c2c?w=500" }
+      { id: 203, name: "Laser Steak", price: 1200, img: "https://images.unsplash.com/photo-1546241072-48010ad28c2c?w=500" },
+      { id: 204, name: "Data Fries", price: 200, img: "https://images.unsplash.com/photo-1573016608244-7d5fb3023023?w=500" },
+      { id: 205, name: "Cyber Sushi", price: 1200, img: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=500" },
+      { id: 206, name: "Binary Burrito", price: 700, img: "https://images.unsplash.com/photo-1626700051175-656a423e8645?w=500" },
+      { id: 207, name: "Grid Gyoza", price: 550, img: "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?w=500" },
+      { id: 208, name: "Static Salad", price: 450, img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500" },
+      { id: 209, name: "Logic Lasagna", price: 1300, img: "https://images.unsplash.com/photo-1574894709920-11b28e7367e3?w=500" },
+      { id: 210, name: "Neural Nuggets", price: 600, img: "https://images.unsplash.com/photo-1562967914-608f82629710?w=500" },
+      { id: 211, name: "Vector Veggie Pie", price: 900, img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500" },
+      { id: 212, name: "A.I. Apple Cake", price: 400, img: "https://images.unsplash.com/photo-1568571780765-9276ac8b75a2?w=500" },
+      { id: 213, name: "Hacker Hummus", price: 350, img: "https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?w=500" },
+      { id: 214, name: "Sync Smoothie", price: 300, img: "https://images.unsplash.com/photo-1502741224143-90386d7f8c82?w=500" },
+      { id: 215, name: "Glitch Gelato", price: 250, img: "https://images.unsplash.com/photo-1501443762994-82bd5dace89a?w=500" }
     ],
     chinese: [
       { id: 301, name: "Neon Dim Sum", price: 350, img: "https://images.unsplash.com/photo-1496116218417-1a781b1c416c?w=500" },
-      { id: 302, name: "Quantum Ramen", price: 550, img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=500" }
+      { id: 302, name: "Quantum Ramen", price: 550, img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=500" },
+      { id: 303, name: "Plasma Bao", price: 320, img: "https://images.unsplash.com/photo-1525755662778-989d0524087e?w=500" },
+      { id: 304, name: "Cyber Spring Rolls", price: 280, img: "https://images.unsplash.com/photo-1544025162-d76694265947?w=500" }
     ]
   };
 
@@ -82,38 +106,11 @@ function App() {
   };
 
   useEffect(() => {
-    const cursor = cursorRef.current;
-
-    const handleMouseMove = (e) => {
-      if (cursor) cursor.style.opacity = "1";
-      mouse.current = { x: e.clientX, y: e.clientY };
-    };
-
-    const handleMouseLeave = () => {
-      if (cursor) cursor.style.opacity = "0";
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        if (cursor) cursor.style.opacity = "0";
-      } else {
-        // Prevent "gliding" from last position when returning
-        cursorPos.current = { ...mouse.current };
-      }
-    };
-
+    const handleMouseMove = (e) => { mouse.current = { x: e.clientX, y: e.clientY }; };
     window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseleave", handleMouseLeave);
-    window.addEventListener("blur", handleMouseLeave); // Handles Alt-Tab
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    
     requestRef.current = requestAnimationFrame(animate);
-    
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseleave", handleMouseLeave);
-      window.removeEventListener("blur", handleMouseLeave);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
       cancelAnimationFrame(requestRef.current);
     };
   }, []);
@@ -143,10 +140,10 @@ function App() {
 
   return (
     <div className="site-wrapper">
-      <Analytics />
       <div className="void-bg" />
       <div ref={cursorRef} className="cursor-follower" />
 
+      {/* CART DRAWER */}
       <div className={`cart-drawer ${isCartOpen ? 'open' : ''}`}>
         <div className="cart-inner">
           <div className="cart-head">
@@ -178,6 +175,7 @@ function App() {
         <div className="logo" onClick={() => setView("home")}>NEON<span>HUB</span></div>
         <div className="nav-links">
           <button className={`nav-btn ${view === 'home' ? 'active' : ''}`} onClick={() => setView("home")}>HOME</button>
+          {/* Toggles the cart open state */}
           <button className="cart-pill" onClick={() => setIsCartOpen(true)}>
             BAG [{cart.length}]
           </button>
@@ -211,16 +209,7 @@ function App() {
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;900&display=swap');
-        
-        @media (hover: hover) {
-          * { cursor: none !important; }
-        }
-        @media (hover: none) {
-          .cursor-follower { display: none !important; }
-          * { cursor: auto !important; }
-        }
-
-        * { box-sizing: border-box; }
+        * { cursor: none !important; box-sizing: border-box; }
         body { margin: 0; background: #000; color: #fff; font-family: 'Outfit', sans-serif; overflow: hidden; }
         .void-bg { position: fixed; inset: 0; background: radial-gradient(circle at 50% 50%, #061b2b 0%, #000 100%); z-index: -1; }
         
@@ -228,11 +217,11 @@ function App() {
           position: fixed; top: 0; left: 0; width: 14px; height: 14px;
           border: 1.5px solid #00f2ff; border-radius: 50%;
           pointer-events: none; z-index: 10000; margin-left: -7px; margin-top: -7px;
-          transition: width 0.3s, height 0.3s, background 0.3s, opacity 0.2s; will-change: transform;
-          opacity: 0; 
+          transition: width 0.3s, height 0.3s, background 0.3s; will-change: transform;
         }
         .cursor-follower.captured { width: 100px; height: 100px; margin-left: -50px; margin-top: -50px; background: rgba(0, 242, 255, 0.1); border-width: 1px; box-shadow: 0 0 30px rgba(0, 242, 255, 0.3); }
 
+        /* CART DRAWER STYLES */
         .cart-drawer {
           position: fixed; top: 0; right: -400px; width: 400px; height: 100vh;
           background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(20px);
@@ -255,6 +244,7 @@ function App() {
         .checkout-btn { width: 100%; background: #00f2ff; color: #000; border: none; padding: 15px; font-weight: 900; letter-spacing: 1px; cursor: pointer !important; }
         .checkout-btn:disabled { background: #333; color: #666; }
 
+        /* HEADER & PHYSICS STYLES */
         .sat-positioner { position: absolute; top: 0; left: 0; width: 100px; height: 100px; z-index: 50; }
         .unified-rotating-circle {
           width: 100px; height: 100px; border-radius: 50%;
@@ -272,6 +262,7 @@ function App() {
         .cart-pill { background: #00f2ff; color: #000; padding: 8px 20px; border: none; font-weight: 900; border-radius: 4px; cursor: pointer !important; }
         
         .shop-view { height: 90vh; overflow-y: auto; padding: 50px 10%; }
+        .menu-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; padding-bottom: 100px; }
         .food-card { background: #080808; border: 1px solid #1a1a1a; padding: 15px; }
         .img-wrap { width: 100%; height: 200px; overflow: hidden; margin-bottom: 15px; }
