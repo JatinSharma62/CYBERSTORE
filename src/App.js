@@ -106,36 +106,42 @@ function App() {
   };
 
 useEffect(() => {
-    // Detect Touch Device
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    
-    // If mobile, don't even start the event listeners or animation loop
-    if (isTouchDevice) {
-        if (cursorRef.current) cursorRef.current.style.display = "none";
-        return;
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  if (isTouchDevice) return;
+
+  const handleMouseMove = (e) => {
+    if (cursorRef.current) cursorRef.current.style.opacity = "1";
+    mouse.current = { x: e.clientX, y: e.clientY };
+  };
+
+  // NEW: This fixes the "freezing" or "jumping" when switching tabs
+  const handleFocus = () => {
+    // When you come back to the tab, instantly snap the cursor to the mouse
+    cursorPos.current = { x: mouse.current.x, y: mouse.current.y };
+  };
+
+  const handleVisibility = () => {
+    if (document.hidden) {
+      if (cursorRef.current) cursorRef.current.style.opacity = "0";
+    } else {
+      // Sync positions again when tab becomes visible
+      handleFocus();
     }
+  };
 
-    const handleMouseMove = (e) => {
-      if (cursorRef.current) cursorRef.current.style.opacity = "1";
-      mouse.current = { x: e.clientX, y: e.clientY };
-    };
+  window.addEventListener("mousemove", handleMouseMove);
+  window.addEventListener("focus", handleFocus); // Sync on window focus
+  document.addEventListener("visibilitychange", handleVisibility);
+  
+  requestRef.current = requestAnimationFrame(animate);
 
-    const handleVisibility = () => {
-      if (document.hidden && cursorRef.current) {
-        cursorRef.current.style.opacity = "0";
-      }
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("visibilitychange", handleVisibility);
-    requestRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("visibilitychange", handleVisibility);
-      cancelAnimationFrame(requestRef.current);
-    };
-  }, []);
+  return () => {
+    window.removeEventListener("mousemove", handleMouseMove);
+    window.removeEventListener("focus", handleFocus);
+    document.removeEventListener("visibilitychange", handleVisibility);
+    cancelAnimationFrame(requestRef.current);
+  };
+}, []);
 
   const total = cart.reduce((sum, item) => sum + item.price, 0);
 
