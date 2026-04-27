@@ -15,6 +15,7 @@ function App() {
   const requestRef = useRef();
   const initialized = useRef(false);
   
+  // YOUR ACTUAL FAMPAY ID
   const FAMPAY_ID = "the.real.shory@fampay";
   const mouse = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
   const cursorPos = useRef({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
@@ -22,52 +23,42 @@ function App() {
   const menus = {
     bakery: [
       { id: 1, name: "Neon Croissant", price: 150, img: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400" },
-      { id: 2, name: "Quantum Cupcake", price: 120, img: "https://images.unsplash.com/photo-1519869325930-281384150729?w=400" },
-      { id: 3, name: "Plasma Sourdough", price: 250, img: "https://images.unsplash.com/photo-1585478259715-876a6a81fc08?w=400" }
+      { id: 2, name: "Quantum Cupcake", price: 120, img: "https://images.unsplash.com/photo-1519869325930-281384150729?w=400" }
     ],
     food: [
-      { id: 201, name: "Grid Burger", price: 450, img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500" },
-      { id: 202, name: "Carbon Pizza", price: 600, img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500" }
+      { id: 201, name: "Grid Burger", price: 450, img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500" }
     ],
     chinese: [
-      { id: 301, name: "Neon Dim Sum", price: 350, img: "https://images.unsplash.com/photo-1496116218417-1a781b1c416c?w=500" },
-      { id: 302, name: "Quantum Ramen", price: 550, img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=500" }
+      { id: 301, name: "Neon Dim Sum", price: 350, img: "https://images.unsplash.com/photo-1496116218417-1a781b1c416c?w=500" }
     ]
   };
 
   const satData = useRef([
-    { id: 0, px: 0.15, py: 0.25, vx: 0.7, vy: 0.5, label: 'BAKERY', target: 'bakery', x: 0, y: 0 },
-    { id: 1, px: 0.70, py: 0.40, vx: -0.6, vy: 0.8, label: 'FOOD', target: 'food', x: 0, y: 0 },
-    { id: 2, px: 0.30, py: 0.75, vx: 0.8, vy: -0.6, label: 'CHINESE', target: 'chinese', x: 0, y: 0 }
+    { id: 0, px: 0.15, py: 0.25, vx: 0.8, vy: 0.6, label: 'BAKERY', target: 'bakery', x: 0, y: 0 },
+    { id: 1, px: 0.70, py: 0.40, vx: -0.7, vy: 0.9, label: 'FOOD', target: 'food', x: 0, y: 0 },
+    { id: 2, px: 0.30, py: 0.75, vx: 0.9, vy: -0.7, label: 'CHINESE', target: 'chinese', x: 0, y: 0 }
   ]);
 
   const animate = () => {
     const W = window.innerWidth;
     const H = window.innerHeight;
-
     if (!initialized.current) {
       satData.current.forEach(s => { s.x = s.px * W; s.y = s.py * H; });
       initialized.current = true;
     }
-
     cursorPos.current.x += (mouse.current.x - cursorPos.current.x) * 0.15;
     cursorPos.current.y += (mouse.current.y - cursorPos.current.y) * 0.15;
     if (cursorRef.current) {
       cursorRef.current.style.transform = `translate3d(${cursorPos.current.x}px, ${cursorPos.current.y}px, 0)`;
     }
-
     satData.current.forEach((sat, i) => {
-      sat.x += sat.vx;
-      sat.y += sat.vy;
-      const limitX = W - 95; 
-      const limitY = H - 95;
-      if (sat.x < 10) { sat.x = 10; sat.vx = Math.abs(sat.vx); }
+      sat.x += sat.vx; sat.y += sat.vy;
+      const limitX = W - 90; const limitY = H - 90;
+      if (sat.x < 5) { sat.x = 5; sat.vx = Math.abs(sat.vx); }
       if (sat.x > limitX) { sat.x = limitX; sat.vx = -Math.abs(sat.vx); }
-      if (sat.y < 10) { sat.y = 10; sat.vy = Math.abs(sat.vy); }
+      if (sat.y < 5) { sat.y = 5; sat.vy = Math.abs(sat.vy); }
       if (sat.y > limitY) { sat.y = limitY; sat.vy = -Math.abs(sat.vy); }
-      if (satRefs.current[i]) {
-        satRefs.current[i].style.transform = `translate3d(${sat.x}px, ${sat.y}px, 0)`;
-      }
+      if (satRefs.current[i]) satRefs.current[i].style.transform = `translate3d(${sat.x}px, ${sat.y}px, 0)`;
     });
     requestRef.current = requestAnimationFrame(animate);
   };
@@ -79,136 +70,113 @@ function App() {
       mouse.current = { x, y };
       if (cursorRef.current) cursorRef.current.style.opacity = "1";
     };
-    const resync = () => {
-        cursorPos.current = { x: mouse.current.x, y: mouse.current.y };
-        if (cursorRef.current) cursorRef.current.style.opacity = "1";
-    };
     window.addEventListener("mousemove", handleMove);
     window.addEventListener("touchstart", handleMove);
     window.addEventListener("touchmove", handleMove);
-    window.addEventListener("focus", resync);
-    document.addEventListener("visibilitychange", resync);
     requestRef.current = requestAnimationFrame(animate);
-    return () => {
-      window.removeEventListener("mousemove", handleMove);
-      window.removeEventListener("touchstart", handleMove);
-      window.removeEventListener("touchmove", handleMove);
-      window.removeEventListener("focus", resync);
-      document.removeEventListener("visibilitychange", resync);
-      cancelAnimationFrame(requestRef.current);
-    };
+    return () => cancelAnimationFrame(requestRef.current);
   }, []);
 
   const total = cart.reduce((sum, item) => sum + item.price, 0);
 
-  const handlePay = () => {
-    const upiUri = `upi://pay?pa=${FAMPAY_ID}&pn=NEONHUB&am=${total}&cu=INR`;
-    window.location.href = upiUri;
-    setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
-      setIsSuccess(true);
-      setCart([]);
-      setTimeout(() => {
-        setIsSuccess(false);
-        setIsCheckingOut(false);
-        setIsCartOpen(false);
-      }, 3000);
-    }, 4000);
-  };
+  // THIS IS THE REAL DEEP LINK URI
+  const upiUrl = `upi://pay?pa=${FAMPAY_ID}&pn=NEON_HUB&am=${total}&cu=INR&tn=OrderFromNeonHub`;
 
   return (
     <div className="site-wrapper">
       <div className="void-bg" />
       <div ref={cursorRef} className="cursor-follower" />
 
+      {/* --- REAL TRANSACTION MODAL --- */}
       {isCheckingOut && (
         <div className="checkout-overlay">
           <div className="checkout-modal">
             {!isSuccess ? (
               <>
-                <h2 className={isProcessing ? "glitch-text" : ""}>
-                  {isProcessing ? "LINKING TO FAMPAY..." : "SECURE CHECKOUT"}
-                </h2>
-                {isProcessing ? <div className="loader"></div> : (
-                  <>
-                    <div className="order-summary">
-                      <p>Receiver: <span>{FAMPAY_ID}</span></p>
-                      <p>Total: <span>₹{total}</span></p>
-                    </div>
-                    <button className="confirm-btn" onClick={handlePay}>OPEN FAMPAY APP</button>
-                    <div className="qr-box">
-                      <img src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=upi://pay?pa=${FAMPAY_ID}%26pn=NEONHUB%26am=${total}%26cu=INR`} alt="QR" />
-                      <span>OR SCAN TO PAY</span>
-                    </div>
-                    <button className="cancel-btn" onClick={() => setIsCheckingOut(false)}>GO BACK</button>
-                  </>
+                <h2 className="neon-text">GATEWAY</h2>
+                <div className="order-summary">
+                  <p>PAY TO: <span>{FAMPAY_ID}</span></p>
+                  <p>TOTAL: <span>₹{total}</span></p>
+                </div>
+
+                {/* THE MAGIC LINK: This opens FamApp directly on phone */}
+                <a href={upiUrl} className="real-upi-button" onClick={() => setIsProcessing(true)}>
+                  OPEN FAMPAY APP
+                </a>
+
+                <div className="qr-container">
+                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiUrl)}`} alt="Scan" />
+                    <span>OR SCAN QR</span>
+                </div>
+
+                {isProcessing && (
+                  <div className="post-pay-ui">
+                    <p>Processing Transaction...</p>
+                    <button className="verify-btn" onClick={() => {setIsSuccess(true); setCart([]);}}>
+                      I HAVE PAID
+                    </button>
+                  </div>
                 )}
+                
+                <button className="close-checkout" onClick={() => setIsCheckingOut(false)}>CANCEL</button>
               </>
             ) : (
-              <div className="success-msg">
-                <div className="check-icon">✓</div>
-                <h2>SYNC SUCCESSFUL</h2>
-                <p>Order Sent to the Grid.</p>
+              <div className="success-screen">
+                <div className="glow-check">✓</div>
+                <h2>PAYMENT RECEIVED</h2>
+                <p>Materializing your order...</p>
+                <button onClick={() => {setIsCheckingOut(false); setIsCartOpen(false); setView('home');}}>BACK TO HUB</button>
               </div>
             )}
           </div>
         </div>
       )}
 
+      {/* --- NAVIGATION --- */}
       <nav className="glass-nav">
         <div className="logo" onClick={() => setView("home")}>NEON<span>HUB</span></div>
         <button className="cart-pill" onClick={() => setIsCartOpen(true)}>BAG [{cart.length}]</button>
       </nav>
 
+      {/* --- CART DRAWER --- */}
       <div className={`cart-drawer ${isCartOpen ? 'open' : ''}`}>
         <div className="cart-inner">
-          <h3>YOUR SELECTION</h3>
-          <div className="cart-items">
+          <h3>SELECTIONS</h3>
+          <div className="cart-list">
             {cart.map((item, i) => (
-              <div key={i} className="cart-row">
-                <span>{item.name}</span>
-                <span>₹{item.price}</span>
-              </div>
+              <div key={i} className="cart-row"><span>{item.name}</span><span>₹{item.price}</span></div>
             ))}
           </div>
-          <div className="cart-footer">
-            <div className="total-row"><span>TOTAL:</span><span>₹{total}</span></div>
-            <button className="checkout-btn" disabled={cart.length === 0} onClick={() => setIsCheckingOut(true)}>AUTHORIZE PAYMENT</button>
-            <button className="close-btn" onClick={() => setIsCartOpen(false)}>CLOSE</button>
+          <div className="cart-total-box">
+             <span>TOTAL: ₹{total}</span>
+             <button disabled={cart.length === 0} onClick={() => setIsCheckingOut(true)}>PROCEED</button>
           </div>
+          <button className="close-btn" onClick={() => setIsCartOpen(false)}>CLOSE</button>
         </div>
       </div>
 
-      {view === "home" && (
-        <>
+      {/* --- VIEWS --- */}
+      {view === "home" ? (
+        <div className="home-container">
           <div className="space-layer">
             {satData.current.map((s, i) => (
               <div key={i} ref={el => satRefs.current[i] = el} className="sat-positioner">
-                <button className="unified-rotating-circle" onClick={() => setView(s.target)}>
-                  <span className="sat-label">{s.label}</span>
-                </button>
+                <button className="unified-rotating-circle" onClick={() => setView(s.target)}>{s.label}</button>
               </div>
             ))}
           </div>
-          <section className="hero">
-            <h1>NEON <br/> <span className="cyan-text">HUB</span></h1>
-          </section>
-        </>
-      )}
-
-      {view !== "home" && (
+          <section className="hero"><h1>NEON<br/><span className="cyan">HUB</span></h1></section>
+        </div>
+      ) : (
         <section className="shop-view">
-          <button className="back-btn" onClick={() => setView('home')}>← BACK TO HUB</button>
+          <button className="back-btn" onClick={() => setView('home')}>← HUB</button>
           <div className="grid">
             {menus[view].map(item => (
-              <div key={item.id} className="food-card">
+              <div key={item.id} className="card">
                 <img src={item.img} alt="" />
-                <div className="card-info">
-                  <h3>{item.name}</h3>
-                  <p>₹{item.price}</p>
-                  <button onClick={() => setCart([...cart, item])}>+ ADD TO BAG</button>
-                </div>
+                <h3>{item.name}</h3>
+                <p>₹{item.price}</p>
+                <button onClick={() => setCart([...cart, item])}>ADD</button>
               </div>
             ))}
           </div>
@@ -216,51 +184,51 @@ function App() {
       )}
 
       <style>{`
-        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { margin: 0; background: #000; color: #fff; overflow: hidden; touch-action: none; }
-        .void-bg { position: fixed; inset: 0; background: radial-gradient(circle at center, #0a192f 0%, #000 100%); z-index: -1; }
-        .cursor-follower { position: fixed; top: 0; left: 0; width: 18px; height: 18px; border: 2px solid #00f2ff; border-radius: 50%; pointer-events: none; z-index: 9999; margin: -9px 0 0 -9px; opacity: 0; will-change: transform; transition: opacity 0.3s; }
-
-        .glass-nav { position: fixed; top: 0; width: 100%; display: flex; justify-content: space-between; padding: 20px; z-index: 100; background: rgba(0,0,0,0.8); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(0,242,255,0.2); }
-        .logo { font-weight: 900; color: #00f2ff; font-size: 1.2rem; cursor: pointer; letter-spacing: 2px; }
-        .cart-pill { background: #00f2ff; color: #000; border: none; padding: 8px 18px; font-weight: 900; border-radius: 2px; cursor: pointer; }
-
-        .space-layer { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
-        .sat-positioner { position: absolute; top: 0; left: 0; pointer-events: auto; will-change: transform; }
-        .unified-rotating-circle { width: 85px; height: 85px; border-radius: 50%; border: 2px solid #00f2ff; background: #000; color: #00f2ff; font-weight: 900; font-size: 9px; cursor: pointer; box-shadow: 0 0 20px rgba(0,242,255,0.3); }
-
-        .hero { height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; pointer-events: none; }
-        .hero h1 { font-size: 5rem; margin: 0; line-height: 0.8; font-weight: 900; }
-        .cyan-text { color: #00f2ff; text-shadow: 0 0 30px rgba(0,242,255,0.5); }
-
-        .shop-view { height: 100vh; overflow-y: auto; padding: 100px 20px 40px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; }
-        .food-card { background: #050505; border: 1px solid #1a1a1a; padding: 15px; transition: 0.3s; }
-        .food-card img { width: 100%; height: 180px; object-fit: cover; border-bottom: 2px solid #00f2ff; }
-        .food-card h3 { margin: 15px 0 5px; font-size: 1rem; }
-        .food-card button { width: 100%; padding: 12px; background: #00f2ff; border: none; font-weight: 900; margin-top: 10px; cursor: pointer; }
-
-        .cart-drawer { position: fixed; top: 0; right: -100%; width: 100%; max-width: 400px; height: 100%; background: #000; z-index: 1000; transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); border-left: 2px solid #00f2ff; }
-        .cart-drawer.open { right: 0; }
-        .cart-inner { padding: 40px 30px; display: flex; flex-direction: column; height: 100%; }
-        .cart-row { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #111; font-size: 0.9rem; }
-        .checkout-btn { width: 100%; padding: 18px; background: #00f2ff; border: none; font-weight: 900; margin-top: 20px; cursor: pointer; }
-
-        .checkout-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .checkout-modal { background: #000; border: 1px solid #00f2ff; padding: 30px; width: 100%; max-width: 380px; text-align: center; }
-        .order-summary { background: #0a0a0a; padding: 15px; margin: 20px 0; text-align: left; }
-        .qr-box { background: #fff; padding: 10px; display: inline-block; margin: 20px 0; }
-        .qr-box span { color: #000; display: block; font-size: 10px; font-weight: 900; margin-top: 5px; }
-        .confirm-btn { width: 100%; padding: 15px; background: #00f2ff; border: none; font-weight: 900; cursor: pointer; }
-        .cancel-btn { background: none; border: none; color: #444; margin-top: 15px; cursor: pointer; text-decoration: underline; }
+        body { margin:0; background:#000; color:#fff; font-family:'Inter', sans-serif; overflow:hidden; touch-action:none; }
+        .void-bg { position:fixed; inset:0; background:radial-gradient(circle, #0a192f, #000); z-index:-1; }
+        .cursor-follower { position:fixed; top:0; left:0; width:20px; height:20px; border:2px solid #00f2ff; border-radius:50%; pointer-events:none; z-index:9999; margin:-10px 0 0 -10px; opacity:0; will-change:transform; }
         
-        .loader { width: 30px; height: 30px; border: 3px solid #111; border-top: 3px solid #00f2ff; border-radius: 50%; animation: spin 1s linear infinite; margin: 20px auto; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .glass-nav { position:fixed; top:0; width:100%; display:flex; justify-content:space-between; padding:20px; z-index:100; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); border-bottom:1px solid #00f2ff33; }
+        .logo { color:#00f2ff; font-weight:900; cursor:pointer; }
+        .cart-pill { background:#00f2ff; border:none; padding:8px 15px; font-weight:900; border-radius:4px; }
 
-        @media (max-width: 600px) {
-          .hero h1 { font-size: 3.2rem; }
-          .unified-rotating-circle { width: 75px; height: 75px; }
+        .space-layer { position:fixed; inset:0; z-index:10; pointer-events:none; }
+        .sat-positioner { position:absolute; top:0; left:0; pointer-events:auto; }
+        .unified-rotating-circle { width:80px; height:80px; border-radius:50%; border:2px solid #00f2ff; background:#000; color:#00f2ff; font-weight:900; font-size:10px; box-shadow:0 0 15px #00f2ff44; }
+
+        .hero { height:100vh; display:flex; align-items:center; justify-content:center; text-align:center; }
+        .hero h1 { font-size:4.5rem; line-height:0.9; margin:0; }
+        .cyan { color:#00f2ff; }
+
+        /* REAL TRANSACTION STYLES */
+        .checkout-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:2000; display:flex; align-items:center; justify-content:center; padding:20px; }
+        .checkout-modal { background:#050505; border:2px solid #00f2ff; padding:30px; width:100%; max-width:380px; text-align:center; box-shadow:0 0 40px #00f2ff22; }
+        .order-summary { text-align:left; background:#111; padding:15px; margin:20px 0; border-left:4px solid #00f2ff; }
+        .order-summary span { color:#00f2ff; float:right; font-weight:900; }
+
+        .real-upi-button { 
+           display:block; width:100%; padding:20px; background:#00f2ff; color:#000; 
+           text-decoration:none; font-weight:900; margin-bottom:20px; border-radius:4px;
+           box-shadow: 0 10px 20px #00f2ff33;
         }
+
+        .qr-container { background:#fff; padding:10px; display:inline-block; margin-bottom:20px; }
+        .qr-container span { color:#000; font-size:10px; display:block; font-weight:900; margin-top:5px; }
+
+        .verify-btn { background:none; border:1px solid #00f2ff; color:#00f2ff; padding:10px 20px; margin-top:10px; cursor:pointer; }
+        .close-checkout { background:none; border:none; color:#444; text-decoration:underline; cursor:pointer; margin-top:15px; }
+
+        .shop-view { height:100vh; overflow-y:auto; padding:100px 20px; }
+        .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap:20px; }
+        .card { background:#0a0a0a; border:1px solid #222; padding:15px; text-align:center; }
+        .card img { width:100%; height:150px; object-fit:cover; border-bottom:1px solid #00f2ff; }
+        .card button { width:100%; background:#00f2ff; border:none; padding:10px; font-weight:900; margin-top:10px; }
+
+        .cart-drawer { position:fixed; right:-100%; top:0; width:100%; max-width:350px; height:100%; background:#000; z-index:500; transition:0.4s; border-left:1px solid #00f2ff; }
+        .cart-drawer.open { right:0; }
+        .cart-inner { padding:40px 20px; }
+        .cart-total-box { border-top:1px solid #222; padding-top:20px; margin-top:20px; }
+        .cart-total-box button { width:100%; background:#00f2ff; border:none; padding:15px; font-weight:900; margin-top:10px; }
       `}</style>
     </div>
   );
