@@ -1,11 +1,10 @@
-import { Analytics } from "@vercel/analytics/react";
 import React, { useState, useEffect, useRef } from "react";
+import { Analytics } from "@vercel/analytics/react";
 
 function App() {
   const [view, setView] = useState("home");
   const [cart, setCart] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isCursorVisible, setIsCursorVisible] = useState(true); // Track if mouse is in window
   
   const cursorRef = useRef(null);
   const satRefs = useRef([]);
@@ -20,8 +19,7 @@ function App() {
       { id: 1, name: "Neon Croissant", price: 150, img: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400" },
       { id: 2, name: "Quantum Cupcake", price: 120, img: "https://images.unsplash.com/photo-1519869325930-281384150729?w=400" },
       { id: 3, name: "Plasma Sourdough", price: 250, img: "https://images.unsplash.com/photo-1585478259715-876a6a81fc08?w=400" },
-      { id: 4, name: "Cyber Macarons", price: 400, img: "https://images.unsplash.com/photo-1569864358642-9d16197022c9?w=400" },
-      { id: 5, name: "Grid Baguette", price: 90, img: "https://images.unsplash.com/photo-1533777419517-3e4017e2e15a?w=400" }
+      { id: 15, name: "Glitch Cookie", price: 40, img: "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=400" }
     ],
     food: [
       { id: 201, name: "Grid Burger", price: 450, img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500" },
@@ -79,36 +77,39 @@ function App() {
 
     const targetClass = `cursor-follower ${isCaptured ? 'captured' : (isRepelled ? 'pushing' : '')}`;
     if (cursor.className !== targetClass) cursor.className = targetClass;
+
     requestRef.current = requestAnimationFrame(animate);
   };
 
   useEffect(() => {
-    const handleMouseMove = (e) => { 
-      mouse.current = { x: e.clientX, y: e.clientY }; 
-      if (!isCursorVisible) setIsCursorVisible(true);
+    const handleMouseMove = (e) => {
+      if (cursorRef.current) cursorRef.current.style.opacity = "1";
+      mouse.current = { x: e.clientX, y: e.clientY };
     };
 
-    // Hide cursor when mouse leaves the window or tab is switched
-    const handleMouseLeave = () => setIsCursorVisible(false);
-    const handleMouseEnter = () => setIsCursorVisible(true);
+    const handleMouseLeave = () => {
+      if (cursorRef.current) cursorRef.current.style.opacity = "0";
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden && cursorRef.current) {
+        cursorRef.current.style.opacity = "0";
+      }
+    };
 
     window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseleave", handleMouseLeave);
-    window.addEventListener("mouseenter", handleMouseEnter);
-    window.addEventListener("blur", handleMouseLeave); // Hides on tab change
-    window.addEventListener("focus", handleMouseEnter);
-
+    window.addEventListener("mouseout", handleMouseLeave);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    
     requestRef.current = requestAnimationFrame(animate);
-
+    
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseleave", handleMouseLeave);
-      window.removeEventListener("mouseenter", handleMouseEnter);
-      window.removeEventListener("blur", handleMouseLeave);
-      window.removeEventListener("focus", handleMouseEnter);
+      window.removeEventListener("mouseout", handleMouseLeave);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       cancelAnimationFrame(requestRef.current);
     };
-  }, [isCursorVisible]);
+  }, []);
 
   const total = cart.reduce((sum, item) => sum + item.price, 0);
 
@@ -137,12 +138,7 @@ function App() {
     <div className="site-wrapper">
       <Analytics />
       <div className="void-bg" />
-      {/* Dynamic inline style to hide cursor when tab is inactive */}
-      <div 
-        ref={cursorRef} 
-        className="cursor-follower" 
-        style={{ opacity: isCursorVisible ? 1 : 0 }} 
-      />
+      <div ref={cursorRef} className="cursor-follower" />
 
       <div className={`cart-drawer ${isCartOpen ? 'open' : ''}`}>
         <div className="cart-inner">
@@ -162,7 +158,10 @@ function App() {
             }
           </div>
           <div className="cart-footer">
-            <div className="total-row"><span>TOTAL:</span><span>₹{total}</span></div>
+            <div className="total-row">
+              <span>TOTAL:</span>
+              <span>₹{total}</span>
+            </div>
             <button className="checkout-btn" disabled={cart.length === 0}>CHECKOUT NOW</button>
           </div>
         </div>
@@ -172,7 +171,9 @@ function App() {
         <div className="logo" onClick={() => setView("home")}>NEON<span>HUB</span></div>
         <div className="nav-links">
           <button className={`nav-btn ${view === 'home' ? 'active' : ''}`} onClick={() => setView("home")}>HOME</button>
-          <button className="cart-pill" onClick={() => setIsCartOpen(true)}>BAG [{cart.length}]</button>
+          <button className="cart-pill" onClick={() => setIsCartOpen(true)}>
+            BAG [{cart.length}]
+          </button>
         </div>
       </nav>
 
@@ -203,7 +204,8 @@ function App() {
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;900&display=swap');
-
+        
+        /* 1. PC: Hide real cursor. 2. Mobile: Hide the circle entirely */
         @media (hover: hover) {
           * { cursor: none !important; }
         }
@@ -221,6 +223,7 @@ function App() {
           border: 1.5px solid #00f2ff; border-radius: 50%;
           pointer-events: none; z-index: 10000; margin-left: -7px; margin-top: -7px;
           transition: width 0.3s, height 0.3s, background 0.3s, opacity 0.2s; will-change: transform;
+          opacity: 0; /* Hidden by default until move */
         }
         .cursor-follower.captured { width: 100px; height: 100px; margin-left: -50px; margin-top: -50px; background: rgba(0, 242, 255, 0.1); border-width: 1px; box-shadow: 0 0 30px rgba(0, 242, 255, 0.3); }
 
@@ -232,19 +235,25 @@ function App() {
         }
         .cart-drawer.open { right: 0; }
         .cart-inner { display: flex; flex-direction: column; height: 100%; padding: 40px 30px; }
+        .cart-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
         .cart-head h3 { font-weight: 900; letter-spacing: 2px; color: #00f2ff; margin: 0; }
         .close-cart { background: none; border: none; color: #fff; font-weight: 900; cursor: pointer !important; }
+        
         .cart-items { flex-grow: 1; overflow-y: auto; }
-        .cart-row { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #1a1a1a; align-items: center; }
+        .empty-msg { opacity: 0.4; font-style: italic; }
+        .cart-row { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #1a1a1a; font-weight: 400; align-items: center;}
         .remove-item { background: none; border: none; color: #ff3e3e; cursor: pointer !important; font-size: 18px; }
+        
         .cart-footer { padding-top: 30px; border-top: 2px solid #00f2ff; }
         .total-row { display: flex; justify-content: space-between; font-size: 1.5rem; font-weight: 900; margin-bottom: 20px; }
-        .checkout-btn { width: 100%; background: #00f2ff; color: #000; border: none; padding: 15px; font-weight: 900; cursor: pointer !important; }
+        .checkout-btn { width: 100%; background: #00f2ff; color: #000; border: none; padding: 15px; font-weight: 900; letter-spacing: 1px; cursor: pointer !important; }
+        .checkout-btn:disabled { background: #333; color: #666; }
 
         .sat-positioner { position: absolute; top: 0; left: 0; width: 100px; height: 100px; z-index: 50; }
         .unified-rotating-circle {
           width: 100px; height: 100px; border-radius: 50%;
-          border: 2px solid rgba(0, 242, 255, 0.4); background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+          border: 2px solid rgba(0, 242, 255, 0.4);
+          background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
           display: flex; align-items: center; justify-content: center;
           animation: spinLoop 15s linear infinite; transition: 0.3s;
         }
@@ -253,6 +262,7 @@ function App() {
 
         .glass-nav { display: flex; justify-content: space-between; padding: 20px 5%; background: rgba(0,0,0,0.9); z-index: 100; position: sticky; top: 0; border-bottom: 1px solid rgba(0, 242, 255, 0.1); }
         .logo { font-size: 22px; font-weight: 900; color: #00f2ff; letter-spacing: 2px; cursor: pointer !important; }
+        .nav-btn { background: none; border: none; color: #fff; font-weight: 900; cursor: pointer !important; }
         .cart-pill { background: #00f2ff; color: #000; padding: 8px 20px; border: none; font-weight: 900; border-radius: 4px; cursor: pointer !important; }
         
         .shop-view { height: 90vh; overflow-y: auto; padding: 50px 10%; }
