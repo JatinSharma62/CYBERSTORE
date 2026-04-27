@@ -105,9 +105,15 @@ function App() {
     requestRef.current = requestAnimationFrame(animate);
   };
 
- useEffect(() => {
+useEffect(() => {
+    // Detect Touch Device
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    if (isTouchDevice) return;
+    
+    // If mobile, don't even start the event listeners or animation loop
+    if (isTouchDevice) {
+        if (cursorRef.current) cursorRef.current.style.display = "none";
+        return;
+    }
 
     const handleMouseMove = (e) => {
       if (cursorRef.current) cursorRef.current.style.opacity = "1";
@@ -130,7 +136,7 @@ function App() {
       cancelAnimationFrame(requestRef.current);
     };
   }, []);
-  
+
   const total = cart.reduce((sum, item) => sum + item.price, 0);
 
   const renderMenu = (type) => (
@@ -159,7 +165,6 @@ function App() {
       <div className="void-bg" />
       <div ref={cursorRef} className="cursor-follower" />
 
-      {/* CART DRAWER */}
       <div className={`cart-drawer ${isCartOpen ? 'open' : ''}`}>
         <div className="cart-inner">
           <div className="cart-head">
@@ -191,7 +196,6 @@ function App() {
         <div className="logo" onClick={() => setView("home")}>NEON<span>HUB</span></div>
         <div className="nav-links">
           <button className={`nav-btn ${view === 'home' ? 'active' : ''}`} onClick={() => setView("home")}>HOME</button>
-          {/* Toggles the cart open state */}
           <button className="cart-pill" onClick={() => setIsCartOpen(true)}>
             BAG [{cart.length}]
           </button>
@@ -225,7 +229,19 @@ function App() {
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;900&display=swap');
-        * { cursor: none !important; box-sizing: border-box; }
+        
+        /* DESKTOP CURSOR HIDING */
+        @media (hover: hover) {
+          * { cursor: none !important; }
+        }
+
+        /* PHONE CURSOR RESTORATION */
+        @media (hover: none) {
+          .cursor-follower { display: none !important; }
+          * { cursor: auto !important; }
+        }
+
+        * { box-sizing: border-box; }
         body { margin: 0; background: #000; color: #fff; font-family: 'Outfit', sans-serif; overflow: hidden; }
         .void-bg { position: fixed; inset: 0; background: radial-gradient(circle at 50% 50%, #061b2b 0%, #000 100%); z-index: -1; }
         
@@ -233,11 +249,11 @@ function App() {
           position: fixed; top: 0; left: 0; width: 14px; height: 14px;
           border: 1.5px solid #00f2ff; border-radius: 50%;
           pointer-events: none; z-index: 10000; margin-left: -7px; margin-top: -7px;
-          transition: width 0.3s, height 0.3s, background 0.3s; will-change: transform;
+          transition: width 0.3s, height 0.3s, background 0.3s, opacity 0.2s; will-change: transform;
+          opacity: 0;
         }
         .cursor-follower.captured { width: 100px; height: 100px; margin-left: -50px; margin-top: -50px; background: rgba(0, 242, 255, 0.1); border-width: 1px; box-shadow: 0 0 30px rgba(0, 242, 255, 0.3); }
 
-        /* CART DRAWER STYLES */
         .cart-drawer {
           position: fixed; top: 0; right: -400px; width: 400px; height: 100vh;
           background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(20px);
@@ -260,7 +276,6 @@ function App() {
         .checkout-btn { width: 100%; background: #00f2ff; color: #000; border: none; padding: 15px; font-weight: 900; letter-spacing: 1px; cursor: pointer !important; }
         .checkout-btn:disabled { background: #333; color: #666; }
 
-        /* HEADER & PHYSICS STYLES */
         .sat-positioner { position: absolute; top: 0; left: 0; width: 100px; height: 100px; z-index: 50; }
         .unified-rotating-circle {
           width: 100px; height: 100px; border-radius: 50%;
