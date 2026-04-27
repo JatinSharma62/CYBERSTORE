@@ -1,10 +1,11 @@
-import { Analytics } from "@vercel/analytics/react"
+import { Analytics } from "@vercel/analytics/react";
 import React, { useState, useEffect, useRef } from "react";
 
 function App() {
   const [view, setView] = useState("home");
   const [cart, setCart] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isCursorVisible, setIsCursorVisible] = useState(true); // Track if mouse is in window
   
   const cursorRef = useRef(null);
   const satRefs = useRef([]);
@@ -82,14 +83,32 @@ function App() {
   };
 
   useEffect(() => {
-    const handleMouseMove = (e) => { mouse.current = { x: e.clientX, y: e.clientY }; };
+    const handleMouseMove = (e) => { 
+      mouse.current = { x: e.clientX, y: e.clientY }; 
+      if (!isCursorVisible) setIsCursorVisible(true);
+    };
+
+    // Hide cursor when mouse leaves the window or tab is switched
+    const handleMouseLeave = () => setIsCursorVisible(false);
+    const handleMouseEnter = () => setIsCursorVisible(true);
+
     window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseleave", handleMouseLeave);
+    window.addEventListener("mouseenter", handleMouseEnter);
+    window.addEventListener("blur", handleMouseLeave); // Hides on tab change
+    window.addEventListener("focus", handleMouseEnter);
+
     requestRef.current = requestAnimationFrame(animate);
+
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseleave", handleMouseLeave);
+      window.removeEventListener("mouseenter", handleMouseEnter);
+      window.removeEventListener("blur", handleMouseLeave);
+      window.removeEventListener("focus", handleMouseEnter);
       cancelAnimationFrame(requestRef.current);
     };
-  }, []);
+  }, [isCursorVisible]);
 
   const total = cart.reduce((sum, item) => sum + item.price, 0);
 
@@ -116,8 +135,14 @@ function App() {
 
   return (
     <div className="site-wrapper">
+      <Analytics />
       <div className="void-bg" />
-      <div ref={cursorRef} className="cursor-follower" />
+      {/* Dynamic inline style to hide cursor when tab is inactive */}
+      <div 
+        ref={cursorRef} 
+        className="cursor-follower" 
+        style={{ opacity: isCursorVisible ? 1 : 0 }} 
+      />
 
       <div className={`cart-drawer ${isCartOpen ? 'open' : ''}`}>
         <div className="cart-inner">
@@ -179,7 +204,6 @@ function App() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;900&display=swap');
 
-        /* MOBILE OPTIMIZED CURSOR */
         @media (hover: hover) {
           * { cursor: none !important; }
         }
@@ -196,7 +220,7 @@ function App() {
           position: fixed; top: 0; left: 0; width: 14px; height: 14px;
           border: 1.5px solid #00f2ff; border-radius: 50%;
           pointer-events: none; z-index: 10000; margin-left: -7px; margin-top: -7px;
-          transition: width 0.3s, height 0.3s, background 0.3s; will-change: transform;
+          transition: width 0.3s, height 0.3s, background 0.3s, opacity 0.2s; will-change: transform;
         }
         .cursor-follower.captured { width: 100px; height: 100px; margin-left: -50px; margin-top: -50px; background: rgba(0, 242, 255, 0.1); border-width: 1px; box-shadow: 0 0 30px rgba(0, 242, 255, 0.3); }
 
