@@ -105,16 +105,32 @@ function App() {
     requestRef.current = requestAnimationFrame(animate);
   };
 
-  useEffect(() => {
-    const handleMouseMove = (e) => { mouse.current = { x: e.clientX, y: e.clientY }; };
+ useEffect(() => {
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (isTouchDevice) return;
+
+    const handleMouseMove = (e) => {
+      if (cursorRef.current) cursorRef.current.style.opacity = "1";
+      mouse.current = { x: e.clientX, y: e.clientY };
+    };
+
+    const handleVisibility = () => {
+      if (document.hidden && cursorRef.current) {
+        cursorRef.current.style.opacity = "0";
+      }
+    };
+
     window.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("visibilitychange", handleVisibility);
     requestRef.current = requestAnimationFrame(animate);
+
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("visibilitychange", handleVisibility);
       cancelAnimationFrame(requestRef.current);
     };
   }, []);
-
+  
   const total = cart.reduce((sum, item) => sum + item.price, 0);
 
   const renderMenu = (type) => (
