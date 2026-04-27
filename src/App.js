@@ -208,6 +208,10 @@ function App() {
       {view === "chinese" && renderMenu("chinese")}
 
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;900&display=swap');
+        * { cursor: none !important; box-sizing: border-box; }
+        body { margin: 0; background: #000; color: #fff; font-family: 'Outfit', sans-serif; overflow: hidden; }
+        .void-bg { position: fixed; inset: 0; background: radial-gradient(circle at 50% 50%, #061b2b 0%, #000 100%); z-index: -1; }
         
         .cursor-follower {
           position: fixed; top: 0; left: 0; width: 14px; height: 14px;
