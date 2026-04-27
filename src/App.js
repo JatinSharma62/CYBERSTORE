@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 function App() {
   const [view, setView] = useState("home");
@@ -269,6 +270,7 @@ function App() {
         .hero h1 { font-size: 6rem; line-height: 0.9; margin: 0; font-weight: 900; }
         .cyan-text { color: #00f2ff; }
       `}</style>
+      <SpeedInsights />
     </div>
   );
 }
